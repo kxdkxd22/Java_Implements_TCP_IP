@@ -4,6 +4,8 @@ import jpcap.NetworkInterfaceAddress;
 import jpcap.PacketReceiver;
 import jpcap.packet.Packet;
 
+import java.io.IOException;
+
 public class ProtocolEntry implements PacketReceiver {
 
     @Override
@@ -12,7 +14,7 @@ public class ProtocolEntry implements PacketReceiver {
         System.out.println("Receive a packet");
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         NetworkInterface[] devices = JpcapCaptor.getDeviceList();
         JpcapCaptor captor = null;
 
@@ -32,6 +34,7 @@ public class ProtocolEntry implements PacketReceiver {
                 System.out.println(" address:"+a.address+" "+a.subnet+" "+a.broadcast);
             }
 
+            captor = JpcapCaptor.openDevice(devices[i],65536,false,20);
 
 
         }
