@@ -1,9 +1,12 @@
+import datalinklayer.DataLinkLayer;
 import jpcap.JpcapCaptor;
 import jpcap.NetworkInterface;
 import jpcap.NetworkInterfaceAddress;
 import jpcap.PacketReceiver;
 import jpcap.packet.Packet;
+import protocol.ARPProtocolLayer;
 
+import java.io.DataInput;
 import java.io.IOException;
 
 public class ProtocolEntry implements PacketReceiver {
@@ -43,6 +46,9 @@ public class ProtocolEntry implements PacketReceiver {
         System.out.println("open device: "+device.name);
         JpcapCaptor jpcap = JpcapCaptor.openDevice(device,2000,true,20);
 
-        jpcap.loopPacket(-1,new DataLinkLayer());
+        DataLinkLayer dataLinkLayer = DataLinkLayer.getInstance();
+        dataLinkLayer.initWithOpenDevice(device);
+
+        jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
 }
