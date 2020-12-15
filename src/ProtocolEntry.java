@@ -4,9 +4,7 @@ import jpcap.NetworkInterface;
 import jpcap.NetworkInterfaceAddress;
 import jpcap.PacketReceiver;
 import jpcap.packet.Packet;
-import protocol.ARPProtocolLayer;
 
-import java.io.DataInput;
 import java.io.IOException;
 
 public class ProtocolEntry implements PacketReceiver {

@@ -1,4 +1,4 @@
-package protocol;
+package ARPProtocolLayer;
 
 import datalinklayer.DataLinkLayer;
 import jpcap.PacketReceiver;

@@ -1,9 +1,10 @@
 package datalinklayer;
 
+import ICMPProtocolLayer.ICMPProtocolLayer;
 import jpcap.*;
 import jpcap.packet.EthernetPacket;
 import jpcap.packet.Packet;
-import protocol.ARPProtocolLayer;
+import ARPProtocolLayer.ARPProtocolLayer;
 import utils.IMacReceiver;
 import utils.PacketProvider;
 
@@ -47,6 +48,7 @@ public class DataLinkLayer extends PacketProvider implements jpcap.PacketReceive
         this.sender = captor.getJpcapSenderInstance();
 
         this.testARPProtocol();
+        this.testICMPProtocol();
     }
 
     private Inet4Address getDeviceIpAddress(){
@@ -109,6 +111,11 @@ public class DataLinkLayer extends PacketProvider implements jpcap.PacketReceive
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+    }
+
+    private void testICMPProtocol(){
+        ICMPProtocolLayer icmpProtocolLayer = new ICMPProtocolLayer();
+        this.registerPacketReceiver(icmpProtocolLayer);
     }
 
     @Override
