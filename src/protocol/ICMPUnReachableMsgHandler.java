@@ -1,4 +1,4 @@
-package ICMPProtocolLayer;
+package protocol;
 
 import jpcap.packet.IPPacket;
 

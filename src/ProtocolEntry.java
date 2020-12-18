@@ -1,19 +1,13 @@
+import Application.PingApp;
 import datalinklayer.DataLinkLayer;
 import jpcap.JpcapCaptor;
 import jpcap.NetworkInterface;
 import jpcap.NetworkInterfaceAddress;
-import jpcap.PacketReceiver;
-import jpcap.packet.Packet;
 
 import java.io.IOException;
+import java.net.InetAddress;
 
-public class ProtocolEntry implements PacketReceiver {
-
-    @Override
-    public void receivePacket(Packet packet) {
-        System.out.println(packet);
-        System.out.println("Receive a packet");
-    }
+public class ProtocolEntry {
 
     public static void main(String[] args) throws IOException {
         NetworkInterface[] devices = JpcapCaptor.getDeviceList();
@@ -46,6 +40,11 @@ public class ProtocolEntry implements PacketReceiver {
 
         DataLinkLayer dataLinkLayer = DataLinkLayer.getInstance();
         dataLinkLayer.initWithOpenDevice(device);
+
+        String ip = "10.4.0.1";
+        InetAddress address = InetAddress.getByName(ip);
+        PingApp pingApp = new PingApp(1,address.getAddress());
+        pingApp.startPing();
 
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
