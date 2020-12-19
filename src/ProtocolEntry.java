@@ -1,3 +1,4 @@
+import Application.HPingApp;
 import Application.PingApp;
 import datalinklayer.DataLinkLayer;
 import jpcap.JpcapCaptor;
@@ -43,7 +44,7 @@ public class ProtocolEntry {
 
         String ip = "10.4.0.1";
         InetAddress address = InetAddress.getByName(ip);
-        PingApp pingApp = new PingApp(1,address.getAddress());
+        HPingApp pingApp = new HPingApp(1,address.getAddress());
         pingApp.startPing();
 
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
