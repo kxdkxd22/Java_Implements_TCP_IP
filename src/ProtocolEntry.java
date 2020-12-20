@@ -1,5 +1,6 @@
 import Application.HPingApp;
 import Application.PingApp;
+import Application.TraceRoute;
 import datalinklayer.DataLinkLayer;
 import jpcap.JpcapCaptor;
 import jpcap.NetworkInterface;
@@ -42,10 +43,12 @@ public class ProtocolEntry {
         DataLinkLayer dataLinkLayer = DataLinkLayer.getInstance();
         dataLinkLayer.initWithOpenDevice(device);
 
-        String ip = "10.4.0.1";
+        String ip = "";
         InetAddress address = InetAddress.getByName(ip);
-        HPingApp pingApp = new HPingApp(1,address.getAddress());
-        pingApp.startPing();
+        //HPingApp pingApp = new HPingApp(1,address.getAddress());
+        //pingApp.startPing();
+        TraceRoute traceRoute = new TraceRoute(address.getAddress());
+        traceRoute.startTraceRoute();
 
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }

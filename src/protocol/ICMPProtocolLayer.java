@@ -32,6 +32,7 @@ public class ICMPProtocolLayer implements IProtocol {
     public ICMPProtocolLayer(){
         protocol_header_list.add(new ICMPTimeStampHeader());
         protocol_header_list.add(new ICMPEchoHeader());
+        protocol_header_list.add(new ICMPTimeExceededHeader());
     }
 
 
