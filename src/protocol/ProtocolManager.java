@@ -90,6 +90,10 @@ public class ProtocolManager implements PacketReceiver {
         }
     }
 
+    public void broadcastData(byte[] data){
+        dataLinkInstance.sendData(data,broadcast,EthernetPacket.ETHERTYPE_IP);
+    }
+
     @Override
     public void receivePacket(Packet packet) {
         if(packet == null){
@@ -132,11 +136,28 @@ public class ProtocolManager implements PacketReceiver {
                 case IPPacket.IPPROTO_ICMP:
                     handleICMPPacket(packet,info);
                     break;
+                case IPPacket.IPPROTO_UDP:
+                    handleUDPPacket(packet,info);
+                    break;
                 default:
                     return;
             }
 
         }
+    }
+
+    private void handleUDPPacket(Packet packet,HashMap<String,Object> infoFromUpLayer){
+        IProtocol udpProtocol = new UDPProtocolLayer();
+        HashMap<String,Object> headerInfo = udpProtocol.handlePacket(packet);
+
+        short dstPort = (short) headerInfo.get("dest_port");
+
+        IApplication app = ApplicationManager.getInstance().getApplicationByPort(dstPort);
+
+        if(app!=null){
+            app.handleData(headerInfo);
+        }
+
     }
 
     private void handleICMPPacket(Packet packet,HashMap<String,Object>infoFromUpLayer){

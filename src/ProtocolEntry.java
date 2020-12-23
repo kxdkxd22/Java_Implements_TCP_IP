@@ -1,3 +1,4 @@
+import Application.DHCPApplication;
 import Application.HPingApp;
 import Application.PingApp;
 import Application.TraceRoute;
@@ -43,12 +44,15 @@ public class ProtocolEntry {
         DataLinkLayer dataLinkLayer = DataLinkLayer.getInstance();
         dataLinkLayer.initWithOpenDevice(device);
 
-        String ip = "";
-        InetAddress address = InetAddress.getByName(ip);
+        //String ip = "";
+        //InetAddress address = InetAddress.getByName(ip);
         //HPingApp pingApp = new HPingApp(1,address.getAddress());
         //pingApp.startPing();
-        TraceRoute traceRoute = new TraceRoute(address.getAddress());
-        traceRoute.startTraceRoute();
+        //TraceRoute traceRoute = new TraceRoute(address.getAddress());
+        //traceRoute.startTraceRoute();
+
+        DHCPApplication dhcpApp = new DHCPApplication();
+        dhcpApp.dhcpDiscovery();
 
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
