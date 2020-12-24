@@ -4,6 +4,7 @@ import datalinklayer.DataLinkLayer;
 import jpcap.packet.Packet;
 import utils.Utility;
 
+import javax.xml.crypto.Data;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
@@ -91,6 +92,9 @@ public class IPProtocolLayer implements IProtocol {
         byte[] ipArr = DataLinkLayer.getInstance().deviceIPAddress();
         ByteBuffer ip = ByteBuffer.wrap(ipArr);
         int srcIP = ip.getInt();
+        if(headerInfo.get("source_ip")!=null){
+            srcIP = (int) headerInfo.get("source_ip");
+        }
         byteBuffer.order(ByteOrder.BIG_ENDIAN);
         byteBuffer.putInt(srcIP);
 
@@ -131,14 +135,14 @@ public class IPProtocolLayer implements IProtocol {
         buffer.position(DEST_IP_OFFSET);
         buffer.get(dest_ip,0,4);
         headerInfo.put("dest_ip",dest_ip);
-
+        /*
         byte[] ip = DataLinkLayer.getInstance().deviceIPAddress();
         for(int i = 0; i < ip.length; i++){
             if(ip[i]!=dest_ip[i]){
                 return null;
             }
         }
-
+        */
         buffer.position(0);
         byte protocol = buffer.get(PROTOCOL_INDICATOR_OFFSET);
         headerInfo.put("protocol",protocol);

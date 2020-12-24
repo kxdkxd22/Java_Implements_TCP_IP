@@ -68,6 +68,14 @@ public class DataLinkLayer extends PacketProvider implements jpcap.PacketReceive
         }
     }
 
+    public byte[] deviceFakeMacAddress(){
+        byte[] fakemac = new byte[macAddress.length];
+        for(int i = 0; i < macAddress.length; i++){
+            fakemac[i] = (byte) (macAddress[i]+1);
+        }
+        return fakemac;
+    }
+
     public byte[] deviceIPAddress(){
         return this.ipAddress.getAddress();
     }

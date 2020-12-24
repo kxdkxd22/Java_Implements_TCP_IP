@@ -103,6 +103,21 @@ public class DHCPApplication extends Application {
 
     private static byte DHCP_MSG_OFFER = 2;
 
+    private InetAddress server_supply_ip;
+    private static byte OPTION_MSG_REQUEST_TYPE = 3;
+    private static byte OPTION_MSG_REQUEST_LENGTH = 1;
+    private static byte OPTION_REQUESTED_IP_TYPE = 50;
+    private static byte OPTION_REQUESTED_IP_LENGTH = 4;
+    private static byte OPTION_REQUESTED_IP_TYPE_LENGTH = 6;
+
+    private static byte DHCP_MSG_ACK = 5;
+
+    private final static int DHCP_STATE_DISCOVER = 0;
+    private final static int DHCP_STATE_REQUESTING = 1;
+    private final static int DHCP_STATE_ACK = 2;
+
+    private static int dhcp_current_state = DHCP_STATE_DISCOVER;
+
     public DHCPApplication(){
         Random rand = new Random();
         transaction_id = rand.nextInt();
@@ -130,7 +145,7 @@ public class DHCPApplication extends Application {
         buffer.put(next_server_ip_address);
         buffer.put(relay_agent_ip_address);
 
-        buffer.put(DataLinkLayer.getInstance().deviceMacAddress());
+        buffer.put(DataLinkLayer.getInstance().deviceFakeMacAddress());
 
         byte[] padding = new byte[10];
         buffer.put(padding);
@@ -170,7 +185,7 @@ public class DHCPApplication extends Application {
         buffer.put(OPTION_CLIENT_IDENTIFIER);
         buffer.put(OPTION_CLIENT_IDENTIFIER_DATA_LENGTH);
         buffer.put(OPTION_CLINET_IDENTIFIER_HARDWARE_TYPE);
-        buffer.put(DataLinkLayer.getInstance().deviceMacAddress());
+        buffer.put(DataLinkLayer.getInstance().deviceFakeMacAddress());
 
         byte[] ip_lease_time = new byte[OPTION_IP_LEASE_TIME_LENGTH];
         buffer = ByteBuffer.wrap(ip_lease_time);
@@ -281,8 +296,8 @@ public class DHCPApplication extends Application {
         buffer.get(your_addr,0,your_addr.length);
         System.out.println("available ip offer by dhcp server is: ");
         try {
-            InetAddress addr = InetAddress.getByAddress(your_addr);
-            System.out.println(addr.getHostAddress());
+            server_supply_ip = InetAddress.getByAddress(your_addr);
+            System.out.println(server_supply_ip.getHostAddress());
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -313,8 +328,15 @@ public class DHCPApplication extends Application {
             switch (type){
                 case DHCP_MSG_TYPE:
                     buff.get();
-                    if(buff.get()==DHCP_MSG_OFFER){
+                    byte msg_type = buff.get();
+                    if(msg_type==DHCP_MSG_OFFER){
                         System.out.println("receive DHCP OFFER message from server");
+                        dhcp_current_state = DHCP_STATE_REQUESTING;
+                    }
+
+                    if(msg_type==DHCP_MSG_ACK){
+                        dhcp_current_state = DHCP_STATE_ACK;
+                        System.out.println("receive DHCP ACK message from sever ");
                     }
                     break;
                 case DHCP_SERVER_IDENTIFIER:
@@ -350,12 +372,14 @@ public class DHCPApplication extends Application {
                 case DHCP_DOMAIN_NAME:
                     int len = buff.get();
                     for(int i = 0; i < len; i++){
-                        System.out.println((char) buff.get()+" ");
+                        System.out.print((char) buff.get()+" ");
                     }
                     break;
             }
 
         }
+
+        trigger_action_by_state();
 
     }
 
@@ -381,5 +405,109 @@ public class DHCPApplication extends Application {
         System.out.println("\n");
     }
 
+    private void trigger_action_by_state(){
+        switch(dhcp_current_state){
+            case DHCP_STATE_REQUESTING:
+                dhcpRequest();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private byte[] constructDHCPRequestOptions(){
+        byte[] option_msg_type = new byte[OPTION_MSG_TYPE_LENGTH];
+        ByteBuffer buffer = ByteBuffer.wrap(option_msg_type);
+        buffer.put(OPTION_MSG_TYPE);
+        buffer.put(OPTION_MSG_REQUEST_LENGTH);
+        buffer.put(OPTION_MSG_REQUEST_TYPE);
+
+        byte[] parameter_request_list = new byte[OPTION_PARAMETER_REQUEST_LENGTH];
+        buffer = ByteBuffer.wrap(parameter_request_list);
+        buffer.put(OPTION_PARAMETER_REQUEST_LIST);
+        buffer.put(OPTION_PARAMETER_REQUEST_DATA_LENGTH);
+        byte[] option_buffer = new byte[]{OPTIONS_PARAMETER_SUBMIT_MASK,OPTIONS_PARAMETER_STATIC_ROUTER,
+                OPTIONS_PARAMETER_ROUTER,OPTIONS_PARAMETER_DOMAIN_NAME_SERVER,
+                OPTIONS_PARAMETER_DOMAIN_NAME,OPTIONS_PARAMETER_DOMAIN_SEARCH,OPTIONS_PARAMETER_PROXY,OPTIONS_PARAMETER_LDPA,
+                OPTIONS_PARAMETER_IP_NAME_SERVER,OPTIONS_PARAMETER_IP_NODE_TYPE};
+        buffer.put(option_buffer);
+
+        byte[] maximum_dhcp_msg_size = new byte[OPTION_MAXIMUM_DHCP_MESSAGE_SIZE_LENGTH];
+        buffer = ByteBuffer.wrap(maximum_dhcp_msg_size);
+        buffer.put(OPTION_MAXIMUM_DHCP_MESSAGE_SIZE_TYPE);
+        buffer.put(OPTION_MAXIMUM_DHCP_MESSAGE_SIZE_DATA_LENGTH);
+        buffer.putShort(OPTION_MAXIMUM_DHCP_MESSAGE_SIZE_CONTENT);
+
+        byte[] requested_ip_addr = new byte[OPTION_REQUESTED_IP_TYPE_LENGTH+server_supply_ip.getAddress().length];
+        buffer = ByteBuffer.wrap(requested_ip_addr);
+        buffer.put(OPTION_REQUESTED_IP_TYPE);
+        buffer.put(OPTION_REQUESTED_IP_LENGTH);
+        buffer.put(server_supply_ip.getAddress());
+
+        byte[] client_identifier = new byte[OPTION_CLIENT_IDENTIFIER_LENGTH];
+        buffer = ByteBuffer.wrap(client_identifier);
+        buffer.put(OPTION_CLIENT_IDENTIFIER);
+        buffer.put(OPTION_CLIENT_IDENTIFIER_DATA_LENGTH);
+        buffer.put(OPTION_CLINET_IDENTIFIER_HARDWARE_TYPE);
+        buffer.put(DataLinkLayer.getInstance().deviceFakeMacAddress());
+
+        byte[] ip_lease_time = new byte[OPTION_IP_LEASE_TIME_LENGTH];
+        buffer = ByteBuffer.wrap(ip_lease_time);
+        buffer.put(OPTION_IP_LEASE_TIME);
+        buffer.put(OPTION_IP_LEASE_TIME_DATA_LENGTH);
+        buffer.putInt(OPTION_IP_LEASE_TIME_CONTENT);
+
+        byte[] host_name = new byte[OPTION_HOST_NAME_LENGTH];
+        buffer = ByteBuffer.wrap(host_name);
+        buffer.put(OPTION_HOST_NAME);
+        buffer.put(OPTION_HOST_NAME_DATA_LENGTH);
+        buffer.put(OPTION_HOST_NAME_CONTENT);
+
+        byte[] end = new byte[1];
+        end[0] = OPTION_END;
+        byte[] padding = new byte[20];
+        dhcp_options_part = new byte[option_msg_type.length+parameter_request_list.length+
+                maximum_dhcp_msg_size.length+requested_ip_addr.length+client_identifier.length+
+                ip_lease_time.length+host_name.length+end.length+padding.length];
+
+
+        buffer = ByteBuffer.wrap(dhcp_options_part);
+        buffer.put(option_msg_type);
+        buffer.put(parameter_request_list);
+        buffer.put(maximum_dhcp_msg_size);
+        buffer.put(requested_ip_addr);
+        buffer.put(client_identifier);
+        buffer.put(ip_lease_time);
+        buffer.put(host_name);
+        buffer.put(end);
+        buffer.put(padding);
+
+        return buffer.array();
+
+    }
+
+    public void dhcpRequest(){
+        if(this.server_supply_ip == null){
+            return;
+        }
+
+        byte[] options = constructDHCPRequestOptions();
+
+        byte[] dhcpDisBuffer = new byte[dhcp_first_part.length+MAGIC_COOKIE.length+options.length];
+        ByteBuffer buffer = ByteBuffer.wrap(dhcpDisBuffer);
+        buffer.put(dhcp_first_part);
+        buffer.put(MAGIC_COOKIE);
+        buffer.put(dhcp_options_part);
+
+        byte[] udpHeader = createUDPHeader(dhcpDisBuffer);
+        byte[] ipHeader = createIP4Header(udpHeader.length);
+
+        byte[] dhcpPacket = new byte[udpHeader.length+ipHeader.length];
+        buffer=ByteBuffer.wrap(dhcpPacket);
+        buffer.put(ipHeader);
+        buffer.put(udpHeader);
+        ProtocolManager.getInstance().broadcastData(dhcpPacket);
+
+    }
 
 }
