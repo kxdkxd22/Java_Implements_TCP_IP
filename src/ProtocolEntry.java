@@ -1,7 +1,4 @@
-import Application.DHCPApplication;
-import Application.HPingApp;
-import Application.PingApp;
-import Application.TraceRoute;
+import Application.*;
 import datalinklayer.DataLinkLayer;
 import jpcap.JpcapCaptor;
 import jpcap.NetworkInterface;
@@ -51,8 +48,12 @@ public class ProtocolEntry {
         //TraceRoute traceRoute = new TraceRoute(address.getAddress());
         //traceRoute.startTraceRoute();
 
-        DHCPApplication dhcpApp = new DHCPApplication();
-        dhcpApp.dhcpDiscovery();
+        //DHCPApplication dhcpApp = new DHCPApplication();
+        //dhcpApp.dhcpDiscovery();
+
+        InetAddress ip = InetAddress.getByName("202.204.192.1");
+        DNSApplication dnsApp = new DNSApplication(ip.getAddress(),"pan.baidu.com");
+        dnsApp.queryDomain();
 
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
