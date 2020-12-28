@@ -51,10 +51,14 @@ public class ProtocolEntry {
         //DHCPApplication dhcpApp = new DHCPApplication();
         //dhcpApp.dhcpDiscovery();
 
-        InetAddress ip = InetAddress.getByName("202.204.192.1");
-        DNSApplication dnsApp = new DNSApplication(ip.getAddress(),"pan.baidu.com");
-        dnsApp.queryDomain();
+        //InetAddress ip = InetAddress.getByName("202.204.192.1");
+        //DNSApplication dnsApp = new DNSApplication(ip.getAddress(),"pan.baidu.com");
+        //dnsApp.queryDomain();
 
+
+        InetAddress ip = InetAddress.getByName("10.4.7.85");
+        TFTPClient tftp = new TFTPClient(ip.getAddress());
+        tftp.getFile("EUPL-EN.pdf");
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
 }
