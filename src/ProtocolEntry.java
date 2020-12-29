@@ -58,7 +58,7 @@ public class ProtocolEntry {
 
         InetAddress ip = InetAddress.getByName("10.4.7.85");
         TFTPClient tftp = new TFTPClient(ip.getAddress());
-        tftp.getFile("EUPL-EN.pdf");
+        tftp.putFile("1.pdf");
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
 }

@@ -5,10 +5,7 @@ import protocol.ProtocolManager;
 import protocol.UDPProtocolLayer;
 import sun.awt.windows.WBufferStrategy;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -18,17 +15,21 @@ public class TFTPClient extends Application {
     private byte[] server_ip = null;
     private static short OPTION_CODE_READ = 1;
     private static short OPTION_CODE_WRITE = 2;
-    private static short OPTION_CODE_ACK = 4;
+    private static final short OPTION_CODE_ACK = 4;
     private static final short OPTION_CODE_DATA = 3;
     private static final short OPTION_CODE_ERR = 5;
     private static short TFTP_ERROR_FILE_NOT_FOUND = 1;
     private static short OPTION_CODE_LENGTH = 2;
     private short data_block = 1;
+    private short put_block = 0;
     private static char TFTP_SERVER_PORT = 69;
     private char server_port = 0;
     private File download_file;
+    private File upload_file;
+    int upload_file_size = 0;
     private String file_name;
     FileOutputStream file_stream;
+    FileInputStream file_input;
 
     public TFTPClient(byte[] server_ip){
         this.server_ip = server_ip;
@@ -44,14 +45,30 @@ public class TFTPClient extends Application {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        sendReadPacket();
+        sendRequestPacket(OPTION_CODE_READ);
     }
 
-    private void sendReadPacket(){
+    public void putFile(String file_name){
+        upload_file = new File(file_name);
+        this.file_name = file_name;
+
+        try {
+            file_input = new FileInputStream(upload_file);
+            upload_file_size = file_input.available();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        sendRequestPacket(OPTION_CODE_WRITE);
+    }
+
+    private void sendRequestPacket(short option){
         String mode = "netascii";
         byte[] read_request = new byte[OPTION_CODE_LENGTH+this.file_name.length()+1+mode.length()+1];
         ByteBuffer buffer = ByteBuffer.wrap(read_request);
-        buffer.putShort(OPTION_CODE_READ);
+        buffer.putShort(option);
         buffer.put(file_name.getBytes());
         buffer.put((byte)0);
         buffer.put(mode.getBytes());
@@ -132,8 +149,54 @@ public class TFTPClient extends Application {
             case OPTION_CODE_DATA:
                 handleDataPacket(buff);
                 break;
+            case OPTION_CODE_ACK:
+                handleACKPacket(buff);
+                break;
         }
 
+    }
+
+    private void handleACKPacket(ByteBuffer buff){
+        put_block = buff.getShort();
+
+        System.out.println("receive server ack with block num : "+put_block);
+        put_block++;
+        sendDataBlockPacket();
+    }
+
+    private void sendDataBlockPacket(){
+        System.out.println("send data block: "+put_block);
+        byte[] file_content = new byte[512];
+
+        try {
+            int bytes_read = file_input.read(file_content);
+            if(bytes_read<=0){
+                return;
+            }
+            byte[] content = new byte[2+2+bytes_read];
+            ByteBuffer buf = ByteBuffer.wrap(content);
+            buf.putShort(OPTION_CODE_DATA);
+            buf.putShort(put_block);
+            buf.put(file_content,0,bytes_read);
+
+            byte[] udpHeader = createUDPHeader(content);
+            byte[] ipHeader = createIP4Header(udpHeader.length);
+            byte[] dataPacket = new byte[udpHeader.length+ipHeader.length];
+            buf = ByteBuffer.wrap(dataPacket);
+            buf.put(ipHeader);
+            buf.put(udpHeader);
+            ProtocolManager.getInstance().sendData(dataPacket,server_ip);
+            System.out.println("send content with bytes: "+bytes_read);
+            upload_file_size-=bytes_read;
+            if(upload_file_size<=0||bytes_read<512){
+                System.out.println("put file complete");
+                put_block = 0;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void handleDataPacket(ByteBuffer buffer){
