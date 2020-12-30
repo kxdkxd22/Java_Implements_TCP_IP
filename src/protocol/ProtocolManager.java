@@ -75,6 +75,8 @@ public class ProtocolManager implements PacketReceiver {
                 return new IPProtocolLayer();
             case "udp":
                 return new UDPProtocolLayer();
+            case "tcp":
+                return new TCPProtocolLayer();
         }
 
         return null;
@@ -139,6 +141,9 @@ public class ProtocolManager implements PacketReceiver {
                 case IPPacket.IPPROTO_UDP:
                     handleUDPPacket(packet,info);
                     break;
+                case IPPacket.IPPROTO_TCP:
+                    handleTCPPacket(packet,info);
+                    break;
                 default:
                     return;
             }
@@ -149,6 +154,20 @@ public class ProtocolManager implements PacketReceiver {
     private void handleUDPPacket(Packet packet,HashMap<String,Object> infoFromUpLayer){
         IProtocol udpProtocol = new UDPProtocolLayer();
         HashMap<String,Object> headerInfo = udpProtocol.handlePacket(packet);
+
+        short dstPort = (short) headerInfo.get("dest_port");
+
+        IApplication app = ApplicationManager.getInstance().getApplicationByPort(dstPort);
+
+        if(app!=null){
+            app.handleData(headerInfo);
+        }
+
+    }
+
+    private void handleTCPPacket(Packet packet,HashMap<String,Object> infoFromUpLayer){
+        IProtocol tcpProtocol = new TCPProtocolLayer();
+        HashMap<String,Object> headerInfo = tcpProtocol.handlePacket(packet);
 
         short dstPort = (short) headerInfo.get("dest_port");
 

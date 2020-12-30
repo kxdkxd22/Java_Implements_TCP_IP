@@ -56,9 +56,19 @@ public class ProtocolEntry {
         //dnsApp.queryDomain();
 
 
-        InetAddress ip = InetAddress.getByName("10.4.7.85");
-        TFTPClient tftp = new TFTPClient(ip.getAddress());
-        tftp.putFile("1.pdf");
+
+        try {
+            InetAddress ip = InetAddress.getByName("");
+            short port = 80;
+            TCPThreeHandShakes tcpHandShake = new TCPThreeHandShakes(ip.getAddress(),port);
+            tcpHandShake.beginThreeHandShakes();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //TFTPClient tftp = new TFTPClient(ip.getAddress());
+        //tftp.putFile("1.pdf");
+
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
 }
