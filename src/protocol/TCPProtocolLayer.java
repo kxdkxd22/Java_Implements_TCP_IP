@@ -18,7 +18,7 @@ public class TCPProtocolLayer  implements IProtocol{
     private static byte MAXIMUM_SEGMENT_OPTION_KIND = 2;
     private static byte WINDOW_SCALE_OPTION_KIND = 3;
     private static byte WINDOW_SCALE_OPTION_LENGTH = 3;
-    private static byte WINDOW_SCALE_SHIFT_BYTES = 6;
+    private static byte WINDOW_SCALE_SHIFT_BYTES = 8;
     private static byte TCP_URG_BIT = (1<<5);
     private static byte TCP_ACK_BIT = (1<<4);
     private static byte TCP_PSH_BIT = (1<<3);

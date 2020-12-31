@@ -14,7 +14,14 @@ public class TCPThreeHandShakes extends Application {
     private short dest_port;
     private int ack_num = 0;
     private int seq_num = 0;
-    boolean ack = false,syn = false;
+
+    private static int CONNECTION_IDLE = 0;
+    private static int CONNECTION_INIT = 1;
+    private static int CONNECTION_SUCCESS = 2;
+    private static int CONNECTION_FIN_INIT = 3;
+    private static int CONNECTION_FIN_SUCCESS = 4;
+    private int tcp_state = CONNECTION_IDLE;
+
     public TCPThreeHandShakes(byte[] server_ip,short server_port){
         this.dest_ip = server_ip;
         this.dest_port = server_port;
@@ -23,6 +30,12 @@ public class TCPThreeHandShakes extends Application {
 
     public void beginThreeHandShakes() throws Exception {
         createAndSendPacket(null,"SYN");
+        this.tcp_state = CONNECTION_INIT;
+    }
+
+    public void beginClose() throws Exception {
+        createAndSendPacket(null,"FIN,ACK");
+        this.tcp_state = CONNECTION_FIN_INIT;
     }
 
     private void createAndSendPacket(byte[] data,String flags) throws Exception {
@@ -92,29 +105,60 @@ public class TCPThreeHandShakes extends Application {
     public void handleData(HashMap<String,Object>headerInfo){
         short src_port = (short) headerInfo.get("src_port");
         System.out.println("receive TCP packet with port: "+src_port);
-
+        boolean ack = false,syn = false,fin = false;
         if(headerInfo.get("ACK")!=null){
             System.out.println("it is a ACK packet");
             ack = true;
         }
 
         if(headerInfo.get("SYN")!=null){
-            System.out.println();
+            System.out.println("it is a SYN packet");
             syn = true;
+        }
+
+        if(headerInfo.get("FIN")!=null){
+            System.out.println("it is a FIN packet");
+            fin = true;
         }
 
         if(ack&&syn){
             int seq_num = (int) headerInfo.get("seq_num");
             int ack_num = (int)headerInfo.get("ack_num");
             System.out.println("tcp handshake from othersize with seq_num "+seq_num+" and ack_num: "+ack_num);
-            this.seq_num = seq_num+1;
-            this.ack_num = ack_num;
+            this.seq_num = this.seq_num+1;
+            this.ack_num = seq_num+1;
             try {
+                if(this.tcp_state == CONNECTION_INIT){
+                    this.tcp_state = CONNECTION_SUCCESS;
+                    System.out.println("three handshake complete");
+                }
                 createAndSendPacket(null,"ACK");
+                beginClose();
+                System.out.println("hello world");
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        if(ack&&fin){
+            System.out.println("receive fin packet and close connection");
+            if(this.tcp_state == CONNECTION_FIN_INIT){
+                this.tcp_state = CONNECTION_FIN_SUCCESS;
+                System.out.println("three handshake shutdown");
+
+                int seq_num = (int) headerInfo.get("seq_num");
+                int ack_num = (int) headerInfo.get("ack_num");
+                System.out.println("tcp handshake closing from othersize with seq_num "+seq_num+" and ack_num "+ack_num);
+                this.seq_num+=1;
+                this.ack_num= seq_num+1;
+                try {
+                    createAndSendPacket(null,"ACK");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
 
     }

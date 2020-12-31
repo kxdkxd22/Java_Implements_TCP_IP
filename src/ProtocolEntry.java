@@ -58,7 +58,7 @@ public class ProtocolEntry {
 
 
         try {
-            InetAddress ip = InetAddress.getByName("");
+            InetAddress ip = InetAddress.getByName("202.204.202.5");
             short port = 80;
             TCPThreeHandShakes tcpHandShake = new TCPThreeHandShakes(ip.getAddress(),port);
             tcpHandShake.beginThreeHandShakes();
