@@ -29,11 +29,6 @@ public class TCPProtocolLayer  implements IProtocol{
 
     @Override
     public byte[] createHeader(HashMap<String, Object> headerInfo) {
-        short data_length = 0;
-        byte[] data = null;
-        if(headerInfo.get("data")!=null){
-            data = (byte[]) headerInfo.get("data");
-        }
 
         byte[] header_buf = new byte[HEADER_LENGTH];
         ByteBuffer byteBuffer = ByteBuffer.wrap(header_buf);
@@ -105,7 +100,7 @@ public class TCPProtocolLayer  implements IProtocol{
         byte[] option_end = new byte[1];
         option_end[0] = 0;
 
-        int total_length = data_length+header_buf.length+maximum_segment_option.length+window_scale_option.length+option_end.length;
+        int total_length = header_buf.length+maximum_segment_option.length+window_scale_option.length+option_end.length;
 
         if(total_length%4!=0){
             total_length = (total_length/4+1)*4;
@@ -140,15 +135,23 @@ public class TCPProtocolLayer  implements IProtocol{
         pseudo_header_buf.put(reserved);
         pseudo_header_buf.put(TCP_PROTOCOL_NUMBER);
 
-        short tcp_length = (short) buffer.array().length;
-        pseudo_header_buf.putShort(tcp_length);
+        short data_length = 0;
+        byte[] data = null;
+        if(headerInfo.get("data")!=null){
+            data = (byte[]) headerInfo.get("data");
+            data_length = (short) data.length;
+            headerInfo.put("data_length",data.length);
+        }
+        pseudo_header_buf.putShort((short) (buffer.array().length+data_length));
+        byte[] total_buffer = new byte[PSEUDO_HEADER_LENGTH+buffer.array().length+data_length];
+        ByteBuffer total_buf = ByteBuffer.wrap(total_buffer);
+        total_buf.put(pseudo_header);
+        total_buf.put(buffer.array());
+        if(data_length>0){
+            total_buf.put(data);
+        }
 
-        byte[] total_buf = new byte[PSEUDO_HEADER_LENGTH+tcp_length];
-        ByteBuffer total_buffer = ByteBuffer.wrap(total_buf);
-        total_buffer.put(pseudo_header);
-        total_buffer.put(buffer.array());
-
-        return Utility.checksum(total_buf,total_buf.length);
+        return Utility.checksum(total_buffer,total_buffer.length);
     }
 
     @Override
@@ -183,6 +186,8 @@ public class TCPProtocolLayer  implements IProtocol{
         buffer.getShort();
         short urg_pointer = buffer.getShort();
         headerInfo.put("urg_ptr",urg_pointer);
+
+        headerInfo.put("data",packet.data);
         return headerInfo;
     }
 }

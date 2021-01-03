@@ -51,20 +51,22 @@ public class ProtocolEntry {
         //DHCPApplication dhcpApp = new DHCPApplication();
         //dhcpApp.dhcpDiscovery();
 
-        //InetAddress ip = InetAddress.getByName("202.204.192.1");
+        //InetAddress ip = InetAddress.getByName("");
         //DNSApplication dnsApp = new DNSApplication(ip.getAddress(),"pan.baidu.com");
         //dnsApp.queryDomain();
 
 
 
-        try {
-            InetAddress ip = InetAddress.getByName("202.204.202.5");
+        /*try {
+            InetAddress ip = InetAddress.getByName("");
             short port = 80;
             TCPThreeHandShakes tcpHandShake = new TCPThreeHandShakes(ip.getAddress(),port);
             tcpHandShake.beginThreeHandShakes();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
+        TCPRawDataSender tcp_raw = new TCPRawDataSender();
+        tcp_raw.run();
 
         //TFTPClient tftp = new TFTPClient(ip.getAddress());
         //tftp.putFile("1.pdf");
