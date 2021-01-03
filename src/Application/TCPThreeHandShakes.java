@@ -305,6 +305,7 @@ public class TCPThreeHandShakes extends Application {
                     createAndSendPacket(null,"ACK");
                     if(tcp_state!=CONNECTION_IDLE&&tcp_state!=CONNECTION_CLOSING){
                         createAndSendPacket(null,"FIN,ACK");
+                        this.tcp_handler.connect_close_notify(true);
                     }
                 }
 

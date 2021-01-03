@@ -65,11 +65,14 @@ public class ProtocolEntry {
         } catch (Exception e) {
             e.printStackTrace();
         }*/
-        TCPRawDataSender tcp_raw = new TCPRawDataSender();
-        tcp_raw.run();
+       // TCPRawDataSender tcp_raw = new TCPRawDataSender();
+        //tcp_raw.run();
 
         //TFTPClient tftp = new TFTPClient(ip.getAddress());
         //tftp.putFile("1.pdf");
+
+        FTPClient ftpClient = new FTPClient();
+        ftpClient.run();
 
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
