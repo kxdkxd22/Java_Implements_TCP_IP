@@ -294,7 +294,7 @@ public class TCPThreeHandShakes extends Application {
                 }
 
                 if(tcp_state == CONNECTION_CLOSING){
-                    tcp_state = CONNECTION_IDLE;
+                   // tcp_state = CONNECTION_IDLE;
                     this.seq_num = 0;
                     this.ack_num = 0;
                 }
@@ -325,7 +325,7 @@ public class TCPThreeHandShakes extends Application {
                 try {
                     int seq_num = (int) headerInfo.get("seq_num");
                     int ack_num = (int) headerInfo.get("ack_num");
-                    System.out.println("tcp handshake closing from othersize with seq_num "+seq_num+" and ack_num "+ack_num);
+                    System.out.println("tcp handshake closing from othersize with seq_num "+seq_num+" and ack_num: "+ack_num);
                     this.seq_num+=1;
                     this.ack_num= seq_num+1;
                     createAndSendPacket(null,"ACK");

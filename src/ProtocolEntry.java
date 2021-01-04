@@ -71,8 +71,11 @@ public class ProtocolEntry {
         //TFTPClient tftp = new TFTPClient(ip.getAddress());
         //tftp.putFile("1.pdf");
 
-        FTPClient ftpClient = new FTPClient();
-        ftpClient.run();
+      //  FTPClient ftpClient = new FTPClient();
+       // ftpClient.run();
+
+        HTTPClient httpClient = new HTTPClient();
+        httpClient.run();
 
         jpcap.loopPacket(-1, DataLinkLayer.getInstance());
     }
